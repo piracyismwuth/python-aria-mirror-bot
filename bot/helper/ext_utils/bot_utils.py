@@ -58,13 +58,13 @@ def get_readable_file_size(size_in_bytes) -> str:
         return 'File too large'
 
 
-def getDownloadByGid(gid):
-    with download_dict_lock:
-        for dl in download_dict.values():
-            if dl.status() == MirrorStatus.STATUS_DOWNLOADING or dl.status() == MirrorStatus.STATUS_WAITING:
-                if dl.gid() == gid:
-                    return dl
-    return None
+#def getDownloadByGid(gid):
+#    with download_dict_lock:
+#        for dl in download_dict.values():
+#            if dl.status() == MirrorStatus.STATUS_DOWNLOADING or dl.status() == MirrorStatus.STATUS_WAITING:
+#                if dl.gid() == gid:
+#                    return dl
+#    return None
 
 
 def get_progress_bar_string(status):
