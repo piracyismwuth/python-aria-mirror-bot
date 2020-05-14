@@ -15,6 +15,7 @@ URL_REGEX = r"(?:(?:https?|ftp):\/\/)?[\w/\-?=%.]+\.[\w/\-?=%.]+"
 class MirrorStatus:
     STATUS_UPLOADING = "Uploading"
     STATUS_DOWNLOADING = "Downloading"
+    STATUS_DOWNLOAD = "Downloading 2"
     STATUS_WAITING = "Queued"
     STATUS_FAILED = "Failed. Cleaning download"
     STATUS_CANCELLED = "Cancelled"
@@ -58,13 +59,13 @@ def get_readable_file_size(size_in_bytes) -> str:
         return 'File too large'
 
 
-#def getDownloadByGid(gid):
-#    with download_dict_lock:
-#        for dl in download_dict.values():
-#            if dl.status() == MirrorStatus.STATUS_DOWNLOADING or dl.status() == MirrorStatus.STATUS_WAITING:
-#                if dl.gid() == gid:
-#                    return dl
-#    return None
+def getDownloadByGid(gid):
+    with download_dict_lock:
+        for dl in download_dict.values():
+            if dl.status() == MirrorStatus.STATUS_DOWNLOAD or dl.status() == MirrorStatus.STATUS_WAITING:
+                if dl.gid() == gid:
+                    return dl
+    return None
 
 
 def get_progress_bar_string(status):
