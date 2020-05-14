@@ -29,7 +29,7 @@ class AriaDownloadHelper(DownloadHelper):
                 if download.followed_by_ids:
                     self.gid = download.followed_by_ids[0]
                     with download_dict_lock:
-                        download_dict[self.__listener.uid] = AriaDownloadStatus(self, self.__listener)
+                        download_dict[self.__listener.uid] = AriaDownloadStatus(self.gid, self.__listener)
                     if download.is_torrent:
                         download_dict[self.__listener.uid].is_torrent = True
                     update_all_messages()
@@ -62,7 +62,7 @@ class AriaDownloadHelper(DownloadHelper):
             download = aria2.add_uris([link], {'dir': path})
         self.gid = download.gid
         with download_dict_lock:
-            download_dict[self.__listener.uid] = AriaDownloadStatus(self, self.__listener)
+            download_dict[self.__listener.uid] = AriaDownloadStatus(self.gid, self.__listener)
         if download.error_message:
             self.__listener.onDownloadError(download.error_message)
             return
