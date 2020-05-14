@@ -14,7 +14,7 @@ def mirror_status(context,update):
     if len(message) == 0:
         message = "No active downloads"
         reply_message = sendMessage(message, context.bot, update)
-        threading.Thread(target=auto_delete_message, args=(context.bot, update.message, reply_message)).start()
+        threading.Thread(target=auto_delete_message, args=(bot, update.message, reply_message)).start()
         return
     index = update.effective_chat.id
     with status_reply_dict_lock:
