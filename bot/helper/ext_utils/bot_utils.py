@@ -84,6 +84,12 @@ def get_progress_bar_string(status):
     p_str = f"[{p_str}]"
     return p_str
 
+def get_download_index(_list, gid):
+    index = 0
+    for i in _list:
+        if i.download().gid == gid:
+            return index
+        index += 1
 
 def get_readable_message():
     with download_dict_lock:
