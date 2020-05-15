@@ -1,9 +1,9 @@
-from bot import download_dict, download_dict_lock
 import logging
 import re
 import threading
 import time
 
+from bot import download_dict, download_dict_lock
 
 LOGGER = logging.getLogger(__name__)
 
@@ -15,7 +15,6 @@ URL_REGEX = r"(?:(?:https?|ftp):\/\/)?[\w/\-?=%.]+\.[\w/\-?=%.]+"
 class MirrorStatus:
     STATUS_UPLOADING = "Uploading"
     STATUS_DOWNLOADING = "Downloading"
-    STATUS_DOWNLOAD = "Downloading 2"
     STATUS_WAITING = "Queued"
     STATUS_FAILED = "Failed. Cleaning download"
     STATUS_CANCELLED = "Cancelled"
@@ -23,7 +22,7 @@ class MirrorStatus:
 
 
 PROGRESS_MAX_SIZE = 100 // 8
-PROGRESS_INCOMPLETE = ['▓', '▓', '▓', '▓', '▓', '▓', '▓']
+PROGRESS_INCOMPLETE = ['▏', '▎', '▍', '▌', '▋', '▊', '▉']
 
 SIZE_UNITS = ['B', 'KB', 'MB', 'GB', 'TB', 'PB']
 
@@ -62,7 +61,7 @@ def get_readable_file_size(size_in_bytes) -> str:
 def getDownloadByGid(gid):
     with download_dict_lock:
         for dl in download_dict.values():
-            if dl.status() == MirrorStatus.STATUS_DOWNLOAD or dl.status() == MirrorStatus.STATUS_WAITING:
+            if dl.status() != MirrorStatus.STATUS_UPLOADING and dl.status() != MirrorStatus.STATUS_ARCHIVING:
                 if dl.gid() == gid:
                     return dl
     return None
@@ -78,34 +77,29 @@ def get_progress_bar_string(status):
     p = min(max(p, 0), 100)
     cFull = p // 8
     cPart = p % 8 - 1
-    p_str = '▓' * cFull
+    p_str = '█' * cFull
     if cPart >= 0:
         p_str += PROGRESS_INCOMPLETE[cPart]
-    p_str += '░' * (PROGRESS_MAX_SIZE - cFull)
+    p_str += ' ' * (PROGRESS_MAX_SIZE - cFull)
     p_str = f"[{p_str}]"
     return p_str
 
-def get_download_index(_list, gid):
-    index = 0
-    for i in _list:
-        if i.download().gid == gid:
-            return index
-        index += 1
 
 def get_readable_message():
     with download_dict_lock:
         msg = ""
         for download in list(download_dict.values()):
-            msg += f"<b>Filename:</b> <i>{download.name()}</i>"
-            msg += f"\n<b>Status:</b> <code>{download.status()}</code>"
+            msg += f"<i>{download.name()}</i> - "
+            msg += download.status()
             if download.status() != MirrorStatus.STATUS_ARCHIVING:
-                msg += f"\n<code>{get_progress_bar_string(download)}</code>\n<b>Progress:</b> <i>{download.progress()} of {download.size()}</i>" \
-                    f"\n<b>Speed:</b> {download.speed()}\n<b>ETA:</b> {download.eta()}"
+                msg += f"\n<code>{get_progress_bar_string(download)} {download.progress()}</code> of " \
+                       f"{download.size()}" \
+                       f" at {download.speed()}, ETA: {download.eta()} "
             if download.status() == MirrorStatus.STATUS_DOWNLOADING:
                 if hasattr(download, 'is_torrent'):
-                    msg += f"\n<b>Info:</b> <i>Seeders: {download.download().num_seeders}</i>" \
-                           f"   <i>Peers: {download.download().connections}</i>"
-                #msg += f"\nGID: <code>{download.gid()}</code>"
+                    msg += f"| P: {download.aria_download().connections} " \
+                           f"| S: {download.aria_download().num_seeders}"
+                msg += f"\nGID: <code>{download.gid()}</code>"
             msg += "\n\n"
         return msg
 
@@ -141,3 +135,13 @@ def is_magnet(url: str):
     if magnet:
         return True
     return False
+
+def new_thread(fn):
+    """To use as decorator to make a function call threaded.
+    Needs import
+    from threading import Thread"""
+    def wrapper(*args, **kwargs):
+        thread = threading.Thread(target=fn, args=args, kwargs=kwargs)
+        thread.start()
+        return thread
+    return wrapper
